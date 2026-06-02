@@ -1,0 +1,20 @@
+{
+    "servers": {
+        "makuco-mcp": {
+            "command": "npx",
+			"args": [
+				"-y",
+				"https://package.makuco.com.br/makuco-mcp/latest.tgz"
+			],
+ 			"envFile": "${workspaceFolder}/.env"
+        },
+        "context7": {
+            "type": "http",
+            "url": "https://mcp.context7.com/mcp/oauth"
+        },
+        "figma": {
+            "type": "http",
+            "url": "https://mcp.figma.com/mcp"
+        }
+    }
+}

@@ -1,0 +1,96 @@
+@startuml
+!theme cerulean
+title Auth Module — Arquitetura de Componentes (TASK-FRONTEND-001)
+
+package "src/components/" {
+  [AuthCard] as AuthCard
+  note bottom of AuthCard
+    Shared UI primitive
+    white card + logo + paw bg
+    withTheme HOC
+  end note
+}
+
+package "src/features/auth/" {
+  package "components/" {
+    [PasswordInput] as PwdInput
+  }
+  package "screens/" {
+    [LoginScreen] as LoginScr
+    [RegisterScreen] as RegScr
+  }
+  package "hooks/" {
+    [useLogin] as UseLogin
+    [useRegister] as UseRegister
+  }
+}
+
+package "src/redux/" {
+  package "ducks/" {
+    [authSlice] as AuthSlice
+  }
+  package "thunks/" {
+    [loginThunk] as LoginThunk
+    [registerThunk] as RegThunk
+  }
+}
+
+package "src/http/" {
+  [authService] as AuthSvc
+  note bottom of AuthSvc
+    Singleton
+    extends HttpService
+    uses AxiosHttpAdapter
+  end note
+}
+
+package "src/utils/validator/" {
+  [authValidators] as Validators
+  note bottom of Validators
+    Pure functions
+    Return i18n keys
+  end note
+}
+
+package "src/navigation/" {
+  [types.tsx\nAuthStackParamList] as NavTypes
+}
+
+package "src/translations/" {
+  [pt.json\nAUTH_LOGIN\nAUTH_REGISTER] as I18n
+}
+
+' UI composition
+LoginScr --> AuthCard : usa
+RegScr --> AuthCard : usa
+LoginScr --> PwdInput : usa (senha)
+RegScr --> PwdInput : usa (senha + confirmar)
+
+' HOC wiring
+LoginScr ..> UseLogin : injeta via\nwithPropsInjection
+RegScr ..> UseRegister : injeta via\nwithPropsInjection
+
+' Hooks → Redux
+UseLogin --> AuthSlice : useAppSelector\n(isLoading, loginError)
+UseLogin --> LoginThunk : dispatch
+UseRegister --> AuthSlice : useAppSelector\n(isLoading, registerError,\nregisterSuccess)
+UseRegister --> RegThunk : dispatch
+
+' Thunks → HTTP
+LoginThunk --> AuthSvc : login(credentials)
+RegThunk --> AuthSvc : register(payload)
+
+' Validation
+LoginScr --> Validators : validateEmail\nvalidateRequired\nvalidatePasswordLength
+RegScr --> Validators : validateNameLength\nvalidatePasswordMatch
+
+' Navigation
+LoginScr --> NavTypes : navigate('Register')
+RegScr --> NavTypes : goBack()
+
+' i18n
+LoginScr --> I18n : useTranslation('AUTH_LOGIN')
+RegScr --> I18n : useTranslation('AUTH_REGISTER')
+PwdInput --> I18n : accessibilityLabel
+
+@enduml

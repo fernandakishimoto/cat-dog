@@ -1,0 +1,79 @@
+@startuml
+!theme cerulean
+title AuthState — Máquina de Estados (authSlice)
+
+[*] --> Idle : app inicializa
+
+state Idle {
+  Idle : user = null
+  Idle : isLoading = false
+  Idle : loginError = null
+  Idle : registerError = null
+  Idle : registerSuccess = false
+}
+
+state "Login em progresso" as LoginLoading {
+  LoginLoading : isLoading = true
+  LoginLoading : loginError = null
+}
+
+state "Autenticado" as Authenticated {
+  Authenticated : user = UserType
+  Authenticated : isLoading = false
+  Authenticated : loginError = null
+}
+
+state "Erro de Login" as LoginError {
+  LoginError : user = null
+  LoginError : isLoading = false
+  LoginError : loginError = 'AUTH_LOGIN:errorGeneric'
+}
+
+state "Registro em progresso" as RegisterLoading {
+  RegisterLoading : isLoading = true
+  RegisterLoading : registerError = null
+  RegisterLoading : registerSuccess = false
+}
+
+state "Registro com sucesso" as RegisterSuccess {
+  RegisterSuccess : isLoading = false
+  RegisterSuccess : registerSuccess = true
+  RegisterSuccess : registerError = null
+}
+
+state "Erro de Registro" as RegisterError {
+  RegisterError : isLoading = false
+  RegisterError : registerSuccess = false
+  RegisterError : registerError = 'AUTH_REGISTER:errorGeneric'
+}
+
+' Login transitions
+Idle --> LoginLoading : dispatch(loginThunk)\n[pending]
+LoginLoading --> Authenticated : loginThunk.fulfilled\n(user recebido)
+LoginLoading --> LoginError : loginThunk.rejected\n(401 ou outro erro)
+LoginError --> LoginLoading : dispatch(loginThunk)\n[nova tentativa]
+LoginError --> Idle : dispatch(resetAuthErrors)
+
+' Register transitions
+Idle --> RegisterLoading : dispatch(registerThunk)\n[pending]
+RegisterLoading --> RegisterSuccess : registerThunk.fulfilled\n(201 Created)
+RegisterLoading --> RegisterError : registerThunk.rejected\n(409 ou outro erro)
+RegisterError --> RegisterLoading : dispatch(registerThunk)\n[nova tentativa]
+RegisterError --> Idle : dispatch(resetAuthErrors)
+
+' Post-auth
+Authenticated --> Idle : logout\n(TASK-FRONTEND-003)
+
+note right of Authenticated
+  isLoading e loginError
+  NÃO entram no
+  redux-persist whitelist
+end note
+
+note right of RegisterSuccess
+  Token storage e navegação
+  pós-registro em
+  TASK-FRONTEND-002/003
+end note
+
+@enduml

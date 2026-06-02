@@ -1,0 +1,78 @@
+@startuml
+!theme cerulean
+title Register Flow — TASK-FRONTEND-001
+
+actor "👤 Visitante" as User
+boundary "RegisterScreen" as Screen
+control "useRegister" as Hook
+control "registerThunk" as Thunk
+entity "authSlice\n(Redux)" as Slice
+database "AuthService\nPOST /auth/register" as API
+
+autonumber
+
+== Renderização ==
+User -> Screen : Navega para Cadastro\n(via "Não tem uma conta? Cadastre-se")
+Screen -> Screen : Renderiza Nome, Email,\nSenha, Confirmar Senha, botões
+
+== Validação local (React Final Form) ==
+User -> Screen : Preenche campos e clica "Cadastrar"
+Screen -> Screen : Dispara validadores\n(validateRequired, validateEmail,\nvalidatePasswordLength, validateNameLength,\nvalidatePasswordMatch)
+
+alt Campos inválidos
+    Screen --> User : Exibe erros por campo\nNenhuma requisição feita
+    note right of Screen
+        Ex: "As senhas não coincidem"
+        "A senha deve ter no mínimo 8 caracteres"
+        "O nome deve ter no mínimo 2 caracteres"
+    end note
+else Campos válidos
+
+== Submissão ==
+    Screen -> Hook : onSubmit({ name, email, password, confirmPassword })
+    activate Hook
+    Hook -> Slice : dispatch(registerThunk({ name, email, password }))
+    note right of Hook : confirmPassword\nnunca enviado à API
+    activate Slice
+    Slice -> Slice : isLoading = true\nregisterError = null
+    Slice --> Screen : isLoading = true\n→ botão desabilitado + ActivityIndicator
+    deactivate Slice
+
+    Hook -> Thunk : registerThunk executa
+    activate Thunk
+    Thunk -> API : POST /auth/register\n{ name, email, password }
+    activate API
+
+    alt 201 Created
+        API --> Thunk : {} (email de confirmação enviado)
+        deactivate API
+        Thunk --> Slice : registerThunk.fulfilled
+        activate Slice
+        Slice -> Slice : registerSuccess = true\nisLoading = false\nregisterError = null
+        deactivate Slice
+        deactivate Thunk
+        Hook --> Screen : registerSuccess = true
+        deactivate Hook
+        Screen --> User : Exibe t('AUTH_REGISTER:successMessage')\n[testID="register-success-message"]
+
+    else 409 Email já cadastrado
+        API --> Thunk : Erro HTTP 409
+        deactivate API
+        Thunk -> Thunk : rejectWithValue('AUTH_REGISTER:errorGeneric')\n(RN-04: não revelar existência do email)
+        Thunk --> Slice : registerThunk.rejected
+        activate Slice
+        Slice -> Slice : registerError = 'AUTH_REGISTER:errorGeneric'\nisLoading = false
+        deactivate Slice
+        deactivate Thunk
+        Hook --> Screen : registerError != null
+        deactivate Hook
+        Screen --> User : Exibe t('AUTH_REGISTER:errorGeneric')\n[testID="register-error-message"]
+    end
+end
+
+== Cancelamento ==
+User -> Screen : Clica "Voltar"
+Screen -> Screen : navigation.goBack()
+Screen --> User : Retorna para LoginScreen
+
+@enduml

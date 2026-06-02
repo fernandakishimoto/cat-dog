@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog/.makuco/codebase)",
+      "Bash(bash .makuco/scripts/create-new-prompt.sh --json --feature-folder \".makuco/specs/module_001_autenticacao/feature_001_auth_login_registro\" --short-name \"login-register-screens\")",
+      "mcp__makuco-mcp__generate-plantuml-diagram",
+      "Bash(bash .makuco/scripts/create-codegen-checklist.sh --json --task-file \".makuco/specs/module_001_autenticacao/feature_001_auth_login_registro/tasks/task_001_login_register_screens.md\")",
+      "Bash(git checkout *)"
+    ],
+    "additionalDirectories": [
+      "/Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog/.makuco"
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+@startuml
+!theme cerulean
+title Login Flow — TASK-FRONTEND-001
+
+actor "👤 Usuário" as User
+boundary "LoginScreen" as Screen
+control "useLogin" as Hook
+control "loginThunk" as Thunk
+entity "authSlice\n(Redux)" as Slice
+database "AuthService\nPOST /auth/login" as API
+
+autonumber
+
+== Renderização ==
+User -> Screen : Abre app (não autenticado)
+Screen -> Screen : Renderiza email, senha, botão Entrar
+
+== Validação local (React Final Form) ==
+User -> Screen : Clica em "Entrar"
+Screen -> Screen : Dispara validadores\n(validateEmail, validateRequired,\nvalidatePasswordLength)
+
+alt Campos inválidos
+    Screen --> User : Exibe erros de validação\nNenhuma requisição feita
+else Campos válidos
+
+== Submissão ==
+    Screen -> Hook : onSubmit({ email, password })
+    activate Hook
+    Hook -> Slice : dispatch(loginThunk(credentials))
+    activate Slice
+    Slice -> Slice : isLoading = true\nloginError = null
+    Slice --> Screen : isLoading = true\n→ botão desabilitado + ActivityIndicator
+    deactivate Slice
+
+    Hook -> Thunk : loginThunk executa
+    activate Thunk
+    Thunk -> API : POST /auth/login\n{ email, password }
+    activate API
+
+    alt 200 OK
+        API --> Thunk : { user, accessToken, refreshToken }
+        deactivate API
+        Thunk --> Slice : loginThunk.fulfilled(user)
+        activate Slice
+        Slice -> Slice : user = UserType\nisLoading = false\nloginError = null
+        deactivate Slice
+        Thunk --> Hook : fulfilled
+        deactivate Thunk
+        Hook --> Screen : loginError = null
+        deactivate Hook
+        note over Screen : Navegação pós-login\n(TASK-FRONTEND-003)
+
+    else 401 Unauthorized
+        API --> Thunk : Erro HTTP 401
+        deactivate API
+        Thunk -> Thunk : rejectWithValue('AUTH_LOGIN:errorGeneric')
+        Thunk --> Slice : loginThunk.rejected
+        activate Slice
+        Slice -> Slice : loginError = 'AUTH_LOGIN:errorGeneric'\nisLoading = false
+        deactivate Slice
+        deactivate Thunk
+        Hook --> Screen : loginError != null
+        deactivate Hook
+        Screen --> User : Exibe t('AUTH_LOGIN:errorGeneric')\n[testID="login-error-message"]
+    end
+end
+
+@enduml
