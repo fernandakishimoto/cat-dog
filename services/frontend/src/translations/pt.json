@@ -1,0 +1,35 @@
+{
+  "AUTH_LOGIN": {
+    "emailLabel": "Email",
+    "emailPlaceholder": "Digite seu email",
+    "passwordLabel": "Senha",
+    "passwordPlaceholder": "Digite sua senha",
+    "forgotPasswordLink": "Esqueceu sua senha?",
+    "submitButton": "Entrar",
+    "goToRegisterLink": "Não tem uma conta? Cadastre-se",
+    "errorGeneric": "Email ou senha inválidos. Verifique os dados e tente novamente.",
+    "errorUnconfirmed": "Sua conta ainda não foi confirmada. Verifique seu email ou solicite o reenvio.",
+    "validationRequired": "Este campo é obrigatório.",
+    "validationEmailFormat": "Informe um endereço de email válido.",
+    "validationPasswordMinLength": "A senha deve ter no mínimo 8 caracteres."
+  },
+  "AUTH_REGISTER": {
+    "nameLabel": "Nome",
+    "namePlaceholder": "Digite seu nome completo",
+    "emailLabel": "Email",
+    "emailPlaceholder": "Digite seu email",
+    "passwordLabel": "Senha",
+    "passwordPlaceholder": "Crie uma senha",
+    "confirmPasswordLabel": "Confirmar a Senha",
+    "confirmPasswordPlaceholder": "Repita a senha",
+    "submitButton": "Cadastrar",
+    "backButton": "Voltar",
+    "errorGeneric": "Não foi possível criar a conta. Verifique os dados informados.",
+    "successMessage": "Conta criada! Enviamos um email de confirmação. Verifique sua caixa de entrada.",
+    "validationRequired": "Este campo é obrigatório.",
+    "validationEmailFormat": "Informe um endereço de email válido.",
+    "validationPasswordMinLength": "A senha deve ter no mínimo 8 caracteres.",
+    "validationNameMinLength": "O nome deve ter no mínimo 2 caracteres.",
+    "validationPasswordMatch": "As senhas não coincidem."
+  }
+}

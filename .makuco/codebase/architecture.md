@@ -1,61 +1,64 @@
 # Architecture
 
-> Source: CLAUDE.md (parent directory) — greenfield project. Patterns defined by convention, not yet in code.
+> Source: .makuco/architecture/architecture_definition_context.md
 
 ## Pattern
 
-Feature-sliced / domain-driven layering inside a single React Native app.
-Each domain lives under `src/features/[domain]/` and owns its screens, local hooks, and local components.
-Global concerns (Redux store, HTTP adapters, navigation, theme) live in top-level directories.
+Monorepo with two independent services — Next.js frontend and NestJS backend — deployed separately.
+Backend is organized by domain module; each module owns its controller, service, and repository.
+No microservices, no message queues — intentionally simple for MVP.
 
-## Layer Map
+## Monorepo Services
 
 ```
-Screen (features/[domain]/screens/)
-  └── withPropsInjection HOC (injects service dependencies)
-       └── Feature hook (features/[domain]/hooks/)
-            ├── Redux slice (redux/ducks/)  ←→  Redux thunk (redux/thunks/)
-            │                                        └── HTTP Service (http/)
-            │                                               └── AxiosHttpAdapter (network/)
-            └── React Final Form (form state + validation from utils/validator/)
+cat-dog/
+├── services/frontend/   # Next.js web app (App Router)
+└── services/backend/    # NestJS REST API
 ```
+
+## Backend Layer Map (`services/backend`)
+
+```
+HTTP Request
+  └── NestJS Guard (JWT verification via Supabase Auth)
+       └── Controller (route handler — validates DTO, delegates to service)
+            └── Service (business logic)
+                 └── Repository (Supabase SDK calls — DB, storage)
+```
+
+- **Modules**: one per domain in `src/modules/[domain]/`. Each module self-contains its controller, service, repository, and DTOs.
+- **Guards**: `JwtAuthGuard` uses `supabase.auth.getUser(token)` to verify tokens — no separate JWT library.
+- **DTOs**: defined with class-validator decorators; ValidationPipe applied globally.
+- **Common**: shared guards, interceptors, decorators, and pipes live in `src/common/`.
+
+## Frontend Layer Map (`services/frontend`)
+
+```
+Next.js Page (src/app/[route]/page.tsx)
+  └── Feature Component (src/features/[domain]/components/)
+       ├── React Hook Form (form state + Zod validation)
+       └── HTTP Service (src/http/ — Axios calls to backend)
+```
+
+- **App Router**: pages and layouts in `src/app/`. Route groups: `(auth)`, `(adotante)`, `(admin)`.
+- **Features**: domain-scoped logic in `src/features/[domain]/` — components, hooks, and validators.
+- **Protected routes**: middleware in `src/middleware.ts` checks auth state; redirects unauthenticated users to login.
+
+## Authentication
+
+- Supabase Auth issues access tokens (short-lived, ~15 min) and refresh tokens (~7 days).
+- Frontend stores tokens in httpOnly cookies (set by backend) or memory — never localStorage.
+- Backend verifies every request via `supabase.auth.getUser(accessToken)`.
+- Token refresh handled transparently by frontend interceptor on 401 response.
+- Roles (`admin`, `adotante`) embedded in token metadata; checked by `RolesGuard` in backend.
 
 ## State Management
 
-- **Redux Toolkit** with ducks pattern: one slice per domain in `redux/ducks/`.
-- **redux-persist** persists the store; sensitive slices (auth tokens) are NOT in the whitelist — stored via `expo-secure-store` instead.
-- Global hooks `useAppDispatch` and `useAppSelector` (typed) wrap `react-redux` hooks — never import from `react-redux` directly.
-- Thunks in `redux/thunks/` handle async operations (API calls → dispatch actions).
+- Server state: React Server Components + `fetch` (no extra library needed for most data).
+- Client state: React `useState`/`useContext` for UI state; no Redux in MVP.
+- Auth state: stored in cookie and read server-side for SSR.
 
-## HTTP Layer
+## Communication
 
-- Services extend `HttpService` and use `AxiosHttpAdapter`.
-- Axios instance is configured with interceptors in `~/http/interceptors/` (handles auth headers and token refresh).
-- Error detection: `isResponseError` from `~/network/IHttpAdapter`.
-- Services exported as singletons.
-
-## Navigation
-
-- React Navigation v6.
-- All route param types centralized in `~/navigation/types.tsx`.
-- Route params carry only IDs — screens fetch full data from Redux or API.
-- Nested navigators use `NavigatorScreenParams`.
-
-## Component Architecture
-
-- Screens receive services via `withPropsInjection` HOC for testability.
-- Components that access theme tokens export default wrapped in `withTheme` HOC.
-- Components > ~150 lines are candidates for extraction.
-
-## Whitelabel
-
-- Behavioral differences: `WhiteLabelController` (`~/whiteLabel/`).
-- Visual differences: theme tokens via `@callstack/react-theme-provider`.
-- No app-name conditionals outside `~/whiteLabel/`.
-
-## Roles and Access (Auth Domain)
-
-Two roles in MVP: `admin` and `adotante`.
-- Role-based routing: after login, redirect to role-specific navigator.
-- Protected routes: check auth state in navigation layer; redirect to Login if unauthenticated.
-- Token strategy: short-lived access token + longer-lived refresh token, both stored via `~/utils/Storage` (encrypted).
+- Frontend calls `services/backend` REST API exclusively — no direct Supabase calls from frontend.
+- Backend is the single source of truth for data access.

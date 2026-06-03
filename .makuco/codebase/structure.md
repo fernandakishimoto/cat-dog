@@ -1,14 +1,14 @@
 # Structure
 
-> Source: CLAUDE.md (parent directory) — greenfield project. Directory tree is the intended target structure, not yet scaffolded.
+> Source: .makuco/architecture/architecture_definition_context.md
 
 ## Monorepo Layout
 
 ```
 cat-dog/
 ├── services/
-│   ├── frontend/    # React Native + Expo mobile app
-│   └── backend/     # API server (stack TBD)
+│   ├── frontend/    # Next.js web app (App Router)
+│   └── backend/     # NestJS REST API
 └── .makuco/         # Makuco planning artifacts
 ```
 
@@ -16,40 +16,61 @@ cat-dog/
 
 ```
 src/
-├── components/        # Reusable design system components (shared across features)
-├── features/          # Domain-scoped screens, local hooks, local components
-│   └── [feature]/
-│       ├── screens/
-│       ├── hooks/
-│       └── components/
-├── hoc/               # Higher-Order Components
-│   └── withPropsInjection.tsx   # Injects services into screens for testability
-├── hooks/             # Global custom hooks (useAppDispatch, useAppSelector, etc.)
-├── http/              # HTTP services per domain
-│   └── interceptors/  # Axios interceptors (auth headers, token refresh)
-├── navigation/        # Navigator definitions and route types
-│   └── types.tsx      # All route param types — always use, never `any`
-├── network/           # HTTP adapter interface and implementations
-│   └── IHttpAdapter.ts
-├── redux/             # Store, slices (ducks), thunks
-│   ├── ducks/         # Slice files — one per domain
-│   ├── thunks/        # Async thunks
-│   └── store.ts       # Redux store + redux-persist config
-├── theme/             # Theme tokens per app variant
-├── translations/      # i18n files
-│   └── pt.json        # Single PT-BR translation file, keyed by namespace
-├── utils/             # Pure utility functions
-│   ├── formatter/     # Data formatting helpers
-│   ├── mask/          # Input mask helpers
-│   ├── validator/     # Form validation functions (used by React Final Form)
-│   └── Storage/       # SecureStore + AsyncStorage wrapper
-└── whiteLabel/        # WhiteLabelController + per-app config
+├── app/                    # Next.js App Router pages and layouts
+│   ├── (auth)/             # Route group — login and register (no layout wrapper)
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   └── register/
+│   │       └── page.tsx
+│   ├── (adotante)/         # Route group — adopter area (protected)
+│   │   └── layout.tsx      # Adopter layout wrapper
+│   ├── (admin)/            # Route group — admin area (protected)
+│   │   └── layout.tsx      # Admin layout wrapper
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Root redirect (→ login if unauthenticated)
+├── components/             # Shared UI components (design system primitives)
+├── features/               # Domain-scoped feature logic
+│   └── [domain]/
+│       ├── components/     # Feature-local components
+│       ├── hooks/          # Feature-local hooks
+│       └── validators/     # Zod schemas for this feature
+├── http/                   # Axios API client and interceptors
+│   └── interceptors/       # Token refresh interceptor
+├── hooks/                  # Global custom hooks
+├── middleware.ts            # Next.js middleware — auth route protection
+├── types/                  # Shared TypeScript types
+├── translations/           # i18n files
+│   └── pt.json             # Single PT-BR file, namespaced by feature
+└── utils/                  # Pure utility functions
+    └── validators/         # Shared validation schemas (reused across features)
+```
+
+## Backend Source Tree (`services/backend/src/`)
+
+```
+src/
+├── modules/                # One module per domain
+│   ├── auth/               # Authentication and authorization
+│   │   ├── auth.module.ts
+│   │   ├── auth.controller.ts
+│   │   ├── auth.service.ts
+│   │   └── dto/            # Request/response DTOs for auth
+│   ├── animals/            # Animal CRUD and status management
+│   └── adoption/           # Adoption request flow
+├── common/                 # Cross-cutting concerns
+│   ├── guards/             # JwtAuthGuard, RolesGuard
+│   ├── decorators/         # @Roles(), @CurrentUser()
+│   └── pipes/              # Global ValidationPipe setup
+├── config/                 # ConfigModule — type-safe env vars
+│   └── configuration.ts
+├── app.module.ts           # Root module — imports all domain modules
+└── main.ts                 # Bootstrap — global pipes, CORS, versioning
 ```
 
 ## Key Structural Rules
 
-- Feature-local components live in `features/[feature]/components/`, not in `src/components/`.
-- `src/components/` is for shared, reusable design system primitives only.
-- Tests are co-located: `ComponentName.spec.tsx` next to `ComponentName.tsx`.
-- Route param types are centralized in `~/navigation/types.tsx`.
-- Services are singletons exported from the bottom of their file.
+- Feature-local components live in `features/[domain]/components/`, not in `src/components/`.
+- `src/components/` is for shared, reusable UI primitives only.
+- Tests are co-located: `FileName.spec.ts(x)` next to `FileName.ts(x)`.
+- Backend domain modules are self-contained; cross-module dependencies go through services only.
+- Route param types and API contract types live in `src/types/`.

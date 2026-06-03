@@ -5,7 +5,26 @@
       "Bash(bash .makuco/scripts/create-new-prompt.sh --json --feature-folder \".makuco/specs/module_001_autenticacao/feature_001_auth_login_registro\" --short-name \"login-register-screens\")",
       "mcp__makuco-mcp__generate-plantuml-diagram",
       "Bash(bash .makuco/scripts/create-codegen-checklist.sh --json --task-file \".makuco/specs/module_001_autenticacao/feature_001_auth_login_registro/tasks/task_001_login_register_screens.md\")",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(npm install *)",
+      "Bash(npx jest *)",
+      "mcp__makuco-mcp__sonar-run",
+      "mcp__makuco-mcp__quality-check",
+      "Bash(npx eslint *)",
+      "Bash(git -C /Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog diff --name-only main..HEAD)",
+      "Bash(git -C /Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog status --short)",
+      "Bash(git -C /Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog diff --stat HEAD)",
+      "Bash(npx tsc *)",
+      "mcp__makuco-mcp__complexity-check",
+      "Bash(mkdir -p \"/Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog/services/frontend/src/lib\")",
+      "Bash(mkdir -p \"/Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog/services/frontend/src/components/AuthCard\")",
+      "Bash(mkdir -p \"/Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog/services/frontend/src/features/auth/screens\")",
+      "Bash(yarn ts:check)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(yarn install *)",
+      "Bash(yarn add *)",
+      "Bash(yarn test *)",
+      "Bash(yarn lint *)"
     ],
     "additionalDirectories": [
       "/Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog/.makuco"

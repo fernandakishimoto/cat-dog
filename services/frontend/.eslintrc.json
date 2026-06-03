@@ -1,0 +1,12 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "rules": {
+    "no-console": ["error", { "allow": ["warn"] }],
+    "@typescript-eslint/no-explicit-any": "error",
+    "semi": ["error", "always"],
+    "indent": ["error", 2],
+    "max-len": ["warn", { "code": 120, "ignoreUrls": true, "ignoreStrings": true, "ignoreTemplateLiterals": true }],
+    "arrow-parens": ["error", "as-needed"],
+    "no-multiple-empty-lines": ["error", { "max": 1 }]
+  }
+}

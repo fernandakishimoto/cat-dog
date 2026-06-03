@@ -1,26 +1,36 @@
 # Integrations
 
-> Source: CLAUDE.md + spec_context.md for auth feature. Greenfield — no integrations are yet implemented.
+> Source: .makuco/architecture/tech_stack_context.md
 
-## Mobile Storage
+## Supabase
 
 | Service | Library | Usage |
 |---|---|---|
-| Secure storage | expo-secure-store | Tokens, passwords, PII — via `~/utils/Storage` wrapper |
-| Async storage | @react-native-async-storage/async-storage | Non-sensitive persistent data |
+| Supabase Database | @supabase/supabase-js | Relational data — animals, users, adoption requests via PostgreSQL |
+| Supabase Auth | @supabase/supabase-js | User registration, login, JWT issuance and verification |
+| Supabase Storage | @supabase/supabase-js | Animal photo uploads and retrieval |
+
+### Supabase Client (Backend)
+
+The backend initializes a single Supabase client via `ConfigModule` using `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. The service role key gives full access — used only server-side; never exposed to the frontend.
+
+### Auth verification flow
+
+On every authenticated request, the backend calls `supabase.auth.getUser(accessToken)` inside `JwtAuthGuard`. The user's `id` and `role` metadata are then injected via `@CurrentUser()` decorator into controllers.
 
 ## HTTP
 
 | Service | Library | Usage |
 |---|---|---|
-| REST API client | Axios | All HTTP calls via `AxiosHttpAdapter`; interceptors in `~/http/interceptors/` |
-| Backend API | CatDog backend (TBD) | Auth, animals, adoption requests |
+| REST API client (frontend) | Axios | All frontend-to-backend HTTP calls via a configured Axios instance |
 
-## Email Transactional (Planned — Backend)
+## Email Transactional
 
 | Service | Status | Usage |
 |---|---|---|
-| Email provider (TBD) | Pending definition | Account confirmation email (CatDog-branded: paw print background, orange/purple colors, logo) |
+| Email provider | Pending definition | Account confirmation email; CatDog-branded (paw print background, orange/purple, logo) |
+
+Supabase Auth can be configured to send confirmation emails natively; custom SMTP or a provider like Resend/SendGrid can be configured if visual customization is required.
 
 ## CI/CD
 
@@ -28,8 +38,21 @@
 
 ## Environment Variables
 
-> Not yet defined. `.env.example` does not exist yet. Expected variables (to be confirmed):
-> - `API_BASE_URL` — backend API base URL per environment
+### Backend (`services/backend/.env`)
+
+| Variable | Purpose |
+|---|---|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-only, never exposed) |
+| `SUPABASE_ANON_KEY` | Supabase anonymous key |
+| `PORT` | HTTP server port (default: 3001) |
+| `FRONTEND_URL` | Allowed CORS origin |
+
+### Frontend (`services/frontend/.env.local`)
+
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Backend API base URL |
 
 ## Notes
 

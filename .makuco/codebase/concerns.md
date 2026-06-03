@@ -1,59 +1,56 @@
 # Concerns
 
-> Source: CLAUDE.md + spec_context.md. Greenfield — patterns are defined by convention, not yet in code.
+> Source: .makuco/architecture/architecture_definition_context.md + spec_context.md
 
 ## Authentication & Authorization
 
-- **Strategy**: JWT — short-lived access token (suggested: 15 min) + longer-lived refresh token (suggested: 7 days).
-- **Storage**: Both tokens stored via `~/utils/Storage` with `{ encrypted: true }` (expo-secure-store). Never AsyncStorage.
-- **Token refresh**: Handled transparently in Axios interceptors (`~/http/interceptors/`). On 401 → use refresh token → retry. If refresh expired → redirect to Login.
-- **Roles**: `admin` and `adotante`. Role embedded in token; reverified on every refresh.
-- **Route protection**: Navigation layer checks auth state; unauthenticated users redirected to Login screen.
-- **Role-based navigation**: After login, route to role-specific navigator (`adotante` → adoption area; `admin` → admin panel).
+- **Provider**: Supabase Auth — handles registration, login, JWT issuance, email confirmation.
+- **Tokens**: access token (short-lived, ~15 min) + refresh token (~7 days).
+- **Storage**: tokens stored in httpOnly cookies set by the backend; never localStorage.
+- **Token refresh**: frontend Axios interceptor catches 401 → calls refresh endpoint → retries original request transparently.
+- **Roles**: `admin` and `adotante`. Role embedded in Supabase Auth user metadata; read via `supabase.auth.getUser()`.
+- **Backend verification**: every protected request goes through `JwtAuthGuard`, which calls `supabase.auth.getUser(token)`.
+- **Role enforcement**: `RolesGuard` + `@Roles()` decorator on controllers/handlers. Unauthorized → `403 Forbidden`.
+- **Route protection (frontend)**: `src/middleware.ts` checks auth cookie; redirects unauthenticated users to `/login`.
+- **Role-based redirect**: after login, backend returns user role → frontend redirects to `/adotante` or `/admin` area.
 
 ## Validation
 
-- **Forms**: React Final Form with externalized validators in `~/utils/validator/`.
+- **Backend**: `ValidationPipe` applied globally with `whitelist: true` and `forbidNonWhitelisted: true`. All input validated via class-validator DTOs.
+- **Frontend**: Zod schemas per feature in `src/features/[domain]/validators/`; integrated with React Hook Form via `@hookform/resolvers/zod`.
 - **Auth rules**: email format, password ≥ 8 chars, name ≥ 2 chars, password confirmation match.
-- **Error messages**: All visible strings via i18n (`~/translations/pt.json`). Zero hardcoded user-visible strings.
+- **Error messages**: all user-visible strings via i18n. Zero hardcoded PT-BR strings in JSX.
 
 ## Internationalization (i18n)
 
 - **Library**: react-i18next.
 - **Language**: PT-BR only (MVP).
-- **File**: `src/translations/pt.json` — single file, organized by namespace.
-- **Namespaces**: one per feature screen (e.g., `AUTH_LOGIN`, `AUTH_REGISTER`).
-- **Scope**: All labels, placeholders, error messages, accessibility labels, toasts, and success/error feedback must use `t()`.
+- **File**: `src/translations/pt.json` — single file, namespaced by feature (e.g., `AUTH_LOGIN`, `AUTH_REGISTER`).
+- **Scope**: all labels, placeholders, error messages, success feedback, and accessibility labels use `t()`.
 
 ## Error Handling
 
-- HTTP errors detected via `isResponseError` from `~/network/IHttpAdapter`.
-- User-facing error messages via i18n keys, never raw API error strings.
-- Security rule (RN-04 in spec): login/register errors must not reveal whether an email exists in the system.
+- **Backend**: NestJS `ExceptionFilter` formats all errors as `{ statusCode, message }`. Internal Supabase errors never surfaced raw.
+- **Frontend**: Axios error interceptor maps HTTP errors to i18n keys; displays via `useFormContext` or a toast/notification.
+- **Security (RN-04)**: login and register errors must never reveal whether an email exists in the system.
 
 ## Security
 
-- No `console.log` — only `console.warn`.
+- No `console.log` — use `console.warn` in frontend; `Logger` from `@nestjs/common` in backend.
 - No hardcoded API keys, tokens, or secrets anywhere in code.
-- Sensitive data exclusively through `~/utils/Storage` encrypted path.
-- Password confirmation link tokens: single-use, time-limited (24h suggested).
-- No user enumeration via error messages.
+- Backend CORS restricted to `FRONTEND_URL` env variable.
+- Rate limiting on auth endpoints (implementation TBD — `@nestjs/throttler`).
+- Supabase service role key is server-only; never returned to the client.
+- Passwords hashed by Supabase Auth — backend never stores or receives plain passwords.
+- File uploads validated for type and size before Supabase Storage persistence.
 
 ## Performance
 
-- `useCallback` for all callbacks passed as props or used in lists.
-- `useMemo` for heavy computations.
-- `renderItem` and `keyExtractor` in FlatList/DefaultList always extracted and memoized.
-- Form `subscription` option used to limit re-renders to subscribed fields only.
-
-## Theming
-
-- Token-based via `@callstack/react-theme-provider`.
-- CatDog identity: primary purple (~#7B2D8B), accent orange, light gray background, paw print watermark.
-- No inline styles anywhere — StyleSheet.create or style hooks only.
-- Whitelabel behavioral differences via `WhiteLabelController`; visual differences via theme tokens only.
+- Use React Server Components (RSC) by default in Next.js; add `"use client"` only when necessary.
+- Data fetching: prefer RSC with `fetch()` over client-side data fetching where SSR is possible.
+- Client-side queries: use `SWR` or `React Query` when real-time or client-side refresh is needed.
 
 ## Logging
 
-- Only `console.warn` permitted. `console.log` is prohibited.
-- No structured logging library defined for mobile yet.
+- Frontend: `console.warn` only. No `console.log`.
+- Backend: NestJS `Logger` service for structured logging. No direct `console.*` calls in modules.

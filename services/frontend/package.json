@@ -1,0 +1,78 @@
+{
+  "name": "catdog-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "ts:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
+    "axios": "^1.7.0",
+    "i18next": "^23.7.0",
+    "next": "^15.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-hook-form": "^7.54.0",
+    "react-i18next": "^14.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "typescript": "^5.6.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterFramework": [
+      "@testing-library/jest-dom"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "\\.module\\.css$": "<rootDir>/src/__mocks__/styleMock.js"
+    },
+    "transform": {
+      "^.+\\.(ts|tsx)$": [
+        "babel-jest",
+        {
+          "presets": [
+            "next/babel"
+          ]
+        }
+      ]
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.spec.{ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/app/**",
+      "!src/middleware.ts",
+      "!src/lib/i18n.ts",
+      "!src/components/I18nProvider/**",
+      "!src/types/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  }
+}

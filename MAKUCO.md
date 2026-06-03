@@ -2,54 +2,49 @@
 
 ## What is CatDog?
 
-CatDog is a React Native + Expo mobile app for a single animal adoption NGO.
-It replaces manual processes (Facebook groups, WhatsApp) with a centralized platform for admins to manage animals and adoption requests, and for adopters to browse and request adoptions.
-Two roles in MVP: `admin` and `adotante`. Stack: TypeScript, Redux Toolkit, React Navigation v6, React Final Form, react-i18next, @callstack/react-theme-provider.
+CatDog is a web platform for a single animal adoption NGO.
+It replaces manual processes (Facebook groups, WhatsApp) with a centralized platform where admins manage animals and adoption requests, and adopters browse and request adoptions.
+Two roles in MVP: `admin` and `adotante`.
+Stack: TypeScript, NestJS (backend), Next.js (frontend), Supabase (database, auth, storage).
 
 ## Tech Stack
 
-- React Native + Expo (managed workflow)
-- TypeScript (no `any`)
-- Redux Toolkit + redux-persist (ducks pattern)
-- React Navigation v6
-- React Final Form
-- Axios via `AxiosHttpAdapter` + interceptors
-- react-i18next (PT-BR only, `pt.json`)
-- @callstack/react-theme-provider (whitelabel tokens)
-- expo-secure-store via `~/utils/Storage` (encrypted token storage)
+- Frontend: Next.js (App Router), TypeScript
+- Backend: NestJS, TypeScript
+- Database: Supabase PostgreSQL (via Supabase SDK)
+- Auth: Supabase Auth (JWT — access token ~15 min + refresh token ~7 days)
+- Storage: Supabase Storage (animal photos)
+- Package manager: Yarn
+- Testing: Jest + @testing-library/react (frontend), Jest + @nestjs/testing (backend)
 
 ## Architecture
 
-- Entry: `services/frontend/src/` — greenfield, not yet scaffolded
-- Features: `src/features/[domain]/` — owns screens, local hooks, local components
-- State: Redux slices in `src/redux/ducks/`, thunks in `src/redux/thunks/`
-- HTTP: services extend `HttpService`, use `AxiosHttpAdapter`, singletons exported from file bottom
-- Navigation: types in `~/navigation/types.tsx` — always use, never `any`
-- Screens: receive services via `withPropsInjection` HOC
-- Theme: components using tokens export default wrapped in `withTheme` HOC
+- Monorepo: `services/frontend` (Next.js) + `services/backend` (NestJS) — deployed independently
+- Frontend: App Router pages in `src/app/`, domain logic in `src/features/[domain]/`
+- Backend: one NestJS module per domain in `src/modules/[domain]/` — controller → service → repository pattern
+- Auth: Supabase Auth issues JWTs; backend verifies via `supabase.auth.getUser(token)` in `JwtAuthGuard`
+- Frontend calls backend REST API exclusively — no direct Supabase calls from frontend
 
 ## Code Rules
 
-- Path alias `~/` → `src/`. Never use `../../` for shared code.
-- No inline styles — use `StyleSheet.create` or style hooks.
-- No arrow functions in JSX props — extract + `useCallback`.
-- No `&&` with falsy values — use ternary.
-- `testID` required on interactive elements; `accessibilityLabel` on icon-only buttons.
-- Never import `useDispatch`/`useSelector` from `react-redux` — use `useAppDispatch`/`useAppSelector`.
-- Sensitive data only through `~/utils/Storage` with `{ encrypted: true }`.
-- No `console.log` — only `console.warn`.
-- Zero hardcoded user-visible strings — all via `t()` from react-i18next.
+- No `any` in TypeScript — explicit types always
+- Path alias `@/` → `src/` in both services
+- Backend validation: class-validator DTOs + global `ValidationPipe`
+- Frontend validation: Zod schemas integrated with React Hook Form
+- Never hardcode tokens, secrets, or API keys — use environment variables via `ConfigModule`
+- No `console.log` — `console.warn` in frontend; `Logger` from `@nestjs/common` in backend
+- Zero hardcoded user-visible strings — all via `t()` from react-i18next
+- Tests co-located as `FileName.spec.ts(x)` — minimum 80% coverage
 
 ## Design System
 
 CatDog identity: primary purple (~#7B2D8B), accent orange, light gray background with paw print watermark.
-No design system library — uses @callstack/react-theme-provider for token-based theming.
-Components > ~150 lines are candidates for extraction.
+No external component library defined — use CSS Modules. Logo: orange cat + "CatDog" text.
 
 ## Key Patterns
 
-- Services are singletons; HTTP errors checked via `isResponseError` from `~/network/IHttpAdapter`
-- Form validators externalized to `~/utils/validator/` — never inline in JSX
-- i18n namespaces per feature screen: `AUTH_LOGIN`, `AUTH_REGISTER`, etc.
-- Tests co-located as `ComponentName.spec.tsx`; Jest + @testing-library/react-native
-- Whitelabel: behavior via `WhiteLabelController`, visuals via theme tokens only — no app-name conditionals outside `~/whiteLabel/`
+- i18n namespaces per feature screen: `AUTH_LOGIN`, `AUTH_REGISTER`, etc. — file: `src/translations/pt.json`
+- Validation schemas centralized per feature in `src/features/[domain]/validators/`
+- Auth errors must not reveal email existence (RN-04)
+- Route groups in Next.js: `(auth)`, `(adotante)`, `(admin)` — each with its own layout
+- Middleware in `src/middleware.ts` handles auth route protection and role-based redirects
