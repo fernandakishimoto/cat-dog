@@ -1,0 +1,5 @@
+.node_modules
+.makuco
+.vscode
+.env
+.claude
