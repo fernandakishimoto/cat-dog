@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { authService } from '@/http/authService';
-import { LoginFormValuesType } from '@/features/auth/validators/authValidators';
+import type { LoginFormValuesType } from '@/features/auth/validators/authValidators';
 
 type UseLoginReturnType = {
   onSubmit: (values: LoginFormValuesType) => Promise<void>;
@@ -22,8 +22,9 @@ export function useLogin(): UseLoginReturnType {
       setIsLoading(true);
       setLoginError(null);
       try {
-        await authService.login({ email: values.email, password: values.password });
-        router.push('/');
+        const response = await authService.login({ email: values.email, password: values.password });
+        const destination = response.user.role === 'admin' ? '/admin/solicitacoes' : '/';
+        router.push(destination);
       } catch {
         setLoginError('AUTH_LOGIN:errorGeneric');
       } finally {

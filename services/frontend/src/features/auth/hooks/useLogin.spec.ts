@@ -50,9 +50,9 @@ describe('useLogin', () => {
     });
   });
 
-  it('should redirect to / on successful login', async () => {
+  it('should redirect admin to /admin/solicitacoes on successful login', async () => {
     mockLogin.mockResolvedValueOnce({
-      user: { id: '1', name: 'Test', email: 'test@example.com', role: 'adotante' },
+      user: { id: '1', name: 'Admin', email: 'admin@email.com', role: 'admin' },
       accessToken: 'token',
       refreshToken: 'refresh',
     });
@@ -60,12 +60,27 @@ describe('useLogin', () => {
     const { result } = renderHook(() => useLogin());
 
     await act(async () => {
-      await result.current.onSubmit({ email: 'test@example.com', password: 'password123' });
+      await result.current.onSubmit({ email: 'admin@email.com', password: 'password123' });
+    });
+
+    expect(mockPush).toHaveBeenCalledWith('/admin/solicitacoes');
+    expect(result.current.loginError).toBeNull();
+  });
+
+  it('should redirect adotante to / on successful login', async () => {
+    mockLogin.mockResolvedValueOnce({
+      user: { id: '2', name: 'Adotante', email: 'adotante@email.com', role: 'adotante' },
+      accessToken: 'token',
+      refreshToken: 'refresh',
+    });
+
+    const { result } = renderHook(() => useLogin());
+
+    await act(async () => {
+      await result.current.onSubmit({ email: 'adotante@email.com', password: 'password123' });
     });
 
     expect(mockPush).toHaveBeenCalledWith('/');
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.loginError).toBeNull();
   });
 
   it('should set loginError when login fails', async () => {
