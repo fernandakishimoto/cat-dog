@@ -89,5 +89,26 @@ describe('adoptionRequestService', () => {
       });
       expect(result.status).toBe('documentacao');
     });
+
+    it('should include observations when provided', async () => {
+      const updated: AdoptionRequestDetailType = {
+        ...mockDetail,
+        status: 'entrevista',
+        observations: 'Cliente aprovado na entrevista',
+      };
+      mockPatch.mockResolvedValueOnce({ data: updated });
+
+      const result = await adoptionRequestService.updateStatus(
+        'uuid-1',
+        'entrevista',
+        'Cliente aprovado na entrevista',
+      );
+
+      expect(mockPatch).toHaveBeenCalledWith('/adoption-requests/uuid-1/status', {
+        status: 'entrevista',
+        observations: 'Cliente aprovado na entrevista',
+      });
+      expect(result.observations).toBe('Cliente aprovado na entrevista');
+    });
   });
 });
