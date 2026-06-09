@@ -1,4 +1,5 @@
 -- 005_create_adoption_requests.sql
+DROP TYPE IF EXISTS adoption_status CASCADE;
 CREATE TYPE adoption_status AS ENUM (
   'formulario',
   'documentacao',
