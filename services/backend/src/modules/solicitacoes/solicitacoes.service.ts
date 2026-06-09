@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient } from '@supabase/supabase-js';
 
@@ -46,7 +46,7 @@ export class SolicitacoesService {
       .order('created_at', { ascending: false })
       .range(from, to);
 
-    if (error) throw new Error(error.message);
+    if (error) throw new InternalServerErrorException('Erro interno ao processar solicitação');
 
     return {
       data: data ?? [],
@@ -94,7 +94,7 @@ export class SolicitacoesService {
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throw new InternalServerErrorException('Erro interno ao processar solicitação');
 
     return data;
   }

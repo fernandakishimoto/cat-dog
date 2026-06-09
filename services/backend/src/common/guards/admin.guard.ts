@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Request } from 'express';
 
 import type { AppConfigType } from '@/config/configuration';
+import { extractToken } from '@/common/utils/extract-token';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -17,7 +18,7 @@ export class AdminGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractToken(request);
+    const token = extractToken(request);
 
     if (!token) {
       throw new ForbiddenException();
@@ -43,16 +44,6 @@ export class AdminGuard implements CanActivate {
     (request as Request & { user: unknown }).user = data.user;
 
     return true;
-  }
-
-  private extractToken(request: Request): string | undefined {
-    const authHeader = request.headers.authorization;
-
-    if (authHeader?.startsWith('Bearer ')) {
-      return authHeader.slice(7);
-    }
-
-    return request.cookies?.['access_token'] as string | undefined;
   }
 
 }
