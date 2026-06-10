@@ -93,8 +93,8 @@ function ModalContent({ detail, updateError, onUpdateStatus }: ModalContentProps
       <dl className={styles.fields}>
         <ModalField label={t('modalDateLabel')} value={new Date(detail.created_at).toLocaleDateString('pt-BR')} />
         <ModalField label={t('modalAdopterLabel')} value={detail.adopter_name} subValue={detail.adopter_email} />
-        <ModalField label={t('modalAnimalLabel')} value={detail.pet_name} />
-        <ModalField label={t('modalCityLabel')} value={detail.pet_city} />
+        <ModalField label={t('modalAnimalLabel')} value={detail.pet?.name ?? t('petUnavailable')} />
+        <ModalField label={t('modalCityLabel')} value={detail.pet?.city ?? '-'} />
         <ModalField
           label={t('modalObservationsLabel')}
           value={detail.observations ?? t('modalObservationsEmpty')}

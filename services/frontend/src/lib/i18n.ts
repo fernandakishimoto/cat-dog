@@ -7,6 +7,8 @@ const resources = {
   pt: {
     AUTH_LOGIN: ptJson.AUTH_LOGIN,
     AUTH_REGISTER: ptJson.AUTH_REGISTER,
+    ADMIN_SOLICITACOES: ptJson.ADMIN_SOLICITACOES,
+    ADMIN_LAYOUT: ptJson.ADMIN_LAYOUT,
   },
 };
 

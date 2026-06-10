@@ -1,3 +1,7 @@
+import type { PetSummaryType } from '@/types/pet';
+
+export type { PetSummaryType };
+
 export type AdoptionProcessStepType =
   | 'formulario'
   | 'documentacao'
@@ -25,17 +29,13 @@ export type AdoptionRequestSummaryType = {
   id: string;
   created_at: string;
   adopter_name: string;
-  pet_name: string;
-  pet_species: PetSpeciesType;
-  pet_sex: PetSexType;
-  pet_size: PetSizeType;
-  pet_age_months: number;
-  pet_city: string;
+  adopter_email: string;
   status: AdoptionProcessStepType;
+  pet_id: string;
+  pet: PetSummaryType | null;
 };
 
 export type AdoptionRequestDetailType = AdoptionRequestSummaryType & {
-  adopter_email: string;
   observations: string | null;
   updated_at: string;
 };

@@ -19,16 +19,17 @@ type UseSolicitacoesReturnType = {
   error: string | null;
   setFilters: (filters: ListSolicitacoesFiltersType) => void;
   setPage: (page: number) => void;
+  setLimit: (limit: number) => void;
 };
 
-const DEFAULT_PAGINATION: PaginationMetaType = { total: 0, page: 1, limit: 20, totalPages: 0 };
+const DEFAULT_PAGINATION: PaginationMetaType = { total: 0, page: 1, limit: 10, totalPages: 0 };
 
 export function useSolicitacoes(): UseSolicitacoesReturnType {
   const [solicitacoes, setSolicitacoes] = useState<AdoptionRequestSummaryType[]>([]);
   const [pagination, setPagination] = useState<PaginationMetaType>(DEFAULT_PAGINATION);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFiltersState] = useState<ListSolicitacoesFiltersType>({ page: 1, limit: 20 });
+  const [filters, setFiltersState] = useState<ListSolicitacoesFiltersType>({ page: 1, limit: 10 });
 
   const fetchData = useCallback(async (currentFilters: ListSolicitacoesFiltersType) => {
     setIsLoading(true);
@@ -36,7 +37,12 @@ export function useSolicitacoes(): UseSolicitacoesReturnType {
     try {
       const response = await adoptionRequestService.list(currentFilters);
       setSolicitacoes(response.data);
-      setPagination({ total: response.total, page: response.page, limit: response.limit, totalPages: response.totalPages });
+      setPagination({
+        total: response.total,
+        page: response.page,
+        limit: response.limit,
+        totalPages: response.totalPages,
+      });
     } catch {
       setError('ADMIN_SOLICITACOES:errorLoading');
       setSolicitacoes([]);
@@ -57,5 +63,9 @@ export function useSolicitacoes(): UseSolicitacoesReturnType {
     setFiltersState(prev => ({ ...prev, page }));
   }, []);
 
-  return { solicitacoes, pagination, isLoading, error, setFilters, setPage };
+  const setLimit = useCallback((limit: number) => {
+    setFiltersState(prev => ({ ...prev, limit, page: 1 }));
+  }, []);
+
+  return { solicitacoes, pagination, isLoading, error, setFilters, setPage, setLimit };
 }

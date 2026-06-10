@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { AppModule } from './app.module';
 import type { AppConfigType } from './config/configuration';
 
@@ -13,6 +14,8 @@ async function bootstrap() {
     origin: config.get('frontend.url', { infer: true }),
     credentials: true,
   });
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.useGlobalPipes(
     new ValidationPipe({

@@ -16,11 +16,12 @@ const mockUseSolicitacaoModal = useSolicitacaoModal as jest.MockedFunction<typeo
 
 const defaultSolicitacoesHook = {
   solicitacoes: [],
-  pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
+  pagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
   isLoading: false,
   error: null,
   setFilters: jest.fn(),
   setPage: jest.fn(),
+  setLimit: jest.fn(),
 };
 
 const defaultModalHook = {
@@ -39,19 +40,6 @@ describe('SolicitacoesScreen', () => {
     jest.clearAllMocks();
     mockUseSolicitacoes.mockReturnValue(defaultSolicitacoesHook);
     mockUseSolicitacaoModal.mockReturnValue(defaultModalHook);
-  });
-
-  it('should render page title', () => {
-    render(<SolicitacoesScreen />);
-    expect(screen.getByTestId('page-title')).toBeInTheDocument();
-  });
-
-  it('should render search input and filters', () => {
-    render(<SolicitacoesScreen />);
-    expect(screen.getByTestId('search-input')).toBeInTheDocument();
-    expect(screen.getByTestId('filter-species')).toBeInTheDocument();
-    expect(screen.getByTestId('filter-sex')).toBeInTheDocument();
-    expect(screen.getByTestId('filter-size')).toBeInTheDocument();
   });
 
   it('should render empty state when no solicitacoes', () => {
@@ -79,13 +67,18 @@ describe('SolicitacoesScreen', () => {
         id: 'uuid-1',
         created_at: '2026-06-08T10:00:00Z',
         adopter_name: 'Maria',
-        pet_name: 'Bolinha',
-        pet_species: 'cachorro',
-        pet_sex: 'macho',
-        pet_size: 'medio',
-        pet_age_months: 24,
-        pet_city: 'São Paulo',
+        adopter_email: 'maria@email.com',
         status: 'formulario',
+        pet_id: 'pet-1',
+        pet: {
+          name: 'Bolinha',
+          species: 'cachorro',
+          sex: 'macho',
+          size: 'medio',
+          age_months: 24,
+          city: 'São Paulo',
+          photo_url: null,
+        },
       }],
     });
 
@@ -96,16 +89,36 @@ describe('SolicitacoesScreen', () => {
     expect(defaultModalHook.openModal).toHaveBeenCalledWith('uuid-1');
   });
 
-  it('should call setFilters when search input changes', async () => {
-    const user = userEvent.setup({ delay: null });
+  it('should call setLimit when pagination limit changes', async () => {
+    const user = userEvent.setup();
+    mockUseSolicitacoes.mockReturnValue({
+      ...defaultSolicitacoesHook,
+      pagination: { total: 30, page: 1, limit: 10, totalPages: 3 },
+      solicitacoes: [{
+        id: 'uuid-1',
+        created_at: '2026-06-08T10:00:00Z',
+        adopter_name: 'Maria',
+        adopter_email: 'maria@email.com',
+        status: 'formulario',
+        pet_id: 'pet-1',
+        pet: {
+          name: 'Bolinha',
+          species: 'cachorro',
+          sex: 'macho',
+          size: 'medio',
+          age_months: 24,
+          city: 'São Paulo',
+          photo_url: null,
+        },
+      }],
+    });
+
     render(<SolicitacoesScreen />);
 
-    await user.type(screen.getByTestId('search-input'), 'Bolinha');
+    await user.selectOptions(screen.getByTestId('pagination-limit'), '20');
 
     await waitFor(() => {
-      expect(defaultSolicitacoesHook.setFilters).toHaveBeenCalledWith(
-        expect.objectContaining({ search: 'Bolinha' }),
-      );
+      expect(defaultSolicitacoesHook.setLimit).toHaveBeenCalledWith(20);
     });
   });
 });

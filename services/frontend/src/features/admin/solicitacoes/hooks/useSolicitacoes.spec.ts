@@ -17,18 +17,23 @@ const mockResponse = {
       id: 'uuid-1',
       created_at: '2026-06-08T10:00:00Z',
       adopter_name: 'Maria Silva',
-      pet_name: 'Bolinha',
-      pet_species: 'cachorro',
-      pet_sex: 'macho',
-      pet_size: 'medio',
-      pet_age_months: 24,
-      pet_city: 'São Paulo',
+      adopter_email: 'maria@email.com',
       status: 'formulario',
+      pet_id: 'pet-1',
+      pet: {
+        name: 'Bolinha',
+        species: 'cachorro',
+        sex: 'macho',
+        size: 'medio',
+        age_months: 24,
+        city: 'São Paulo',
+        photo_url: null,
+      },
     },
   ],
   total: 1,
   page: 1,
-  limit: 20,
+  limit: 10,
   totalPages: 1,
 };
 
@@ -96,5 +101,19 @@ describe('useSolicitacoes', () => {
 
     await waitFor(() => expect(mockList).toHaveBeenCalledTimes(2));
     expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+  });
+
+  it('should change limit with setLimit', async () => {
+    mockList.mockResolvedValue({ ...mockResponse, limit: 20 });
+
+    const { result } = renderHook(() => useSolicitacoes());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.setLimit(20);
+    });
+
+    await waitFor(() => expect(mockList).toHaveBeenCalledTimes(2));
+    expect(mockList).toHaveBeenLastCalledWith(expect.objectContaining({ limit: 20, page: 1 }));
   });
 });

@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+
+import { createClient } from '@/utils/supabase/middleware';
 
 const PUBLIC_PATHS = ['/login', '/register'];
 
@@ -10,13 +12,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const supabaseResponse = createClient(request);
+
   const token = request.cookies.get('access_token');
 
   if (!token) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  return NextResponse.next();
+  return supabaseResponse;
 }
 
 export const config = {

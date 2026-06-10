@@ -12,13 +12,18 @@ const mockSolicitacoes: AdoptionRequestSummaryType[] = [
     id: 'uuid-1',
     created_at: '2026-06-08T10:00:00Z',
     adopter_name: 'Maria Silva',
-    pet_name: 'Bolinha',
-    pet_species: 'cachorro',
-    pet_sex: 'macho',
-    pet_size: 'medio',
-    pet_age_months: 24,
-    pet_city: 'São Paulo',
+    adopter_email: 'maria@email.com',
     status: 'formulario',
+    pet_id: 'pet-1',
+    pet: {
+      name: 'Bolinha',
+      species: 'cachorro',
+      sex: 'macho',
+      size: 'medio',
+      age_months: 24,
+      city: 'São Paulo',
+      photo_url: 'https://example.com/bolinha.jpg',
+    },
   },
 ];
 
@@ -37,7 +42,8 @@ describe('SolicitacoesTable', () => {
 
     expect(screen.getByTestId('table-header-date')).toBeInTheDocument();
     expect(screen.getByTestId('table-header-pet')).toBeInTheDocument();
-    expect(screen.getByTestId('table-header-city')).toBeInTheDocument();
+    expect(screen.getByTestId('table-header-requester')).toBeInTheDocument();
+    expect(screen.getByTestId('table-header-status')).toBeInTheDocument();
     expect(screen.getByTestId('table-header-actions')).toBeInTheDocument();
   });
 
@@ -47,6 +53,13 @@ describe('SolicitacoesTable', () => {
     expect(screen.getByTestId('table-row-uuid-1')).toBeInTheDocument();
     expect(screen.getByText('Bolinha')).toBeInTheDocument();
     expect(screen.getByText('São Paulo')).toBeInTheDocument();
+    expect(screen.getByText('maria@email.com')).toBeInTheDocument();
+  });
+
+  it('should render pet photo when photo_url is available', () => {
+    render(<SolicitacoesTable {...defaultProps} />);
+
+    expect(screen.getByTestId('pet-photo-uuid-1')).toBeInTheDocument();
   });
 
   it('should render empty state when list is empty', () => {

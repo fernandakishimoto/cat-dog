@@ -74,7 +74,12 @@ export default function LoginScreen() {
           {t('forgotPasswordLink')}
         </button>
 
-        <button type="submit" className={styles.submitButton} disabled={isLoading} data-testid="login-submit">
+        <button
+          type="submit"
+          className={styles.submitButton}
+          disabled={isLoading}
+          data-testid="login-submit"
+        >
           {isLoading ? <span className={styles.spinner} aria-hidden="true" /> : null}
           {t('submitButton')}
         </button>

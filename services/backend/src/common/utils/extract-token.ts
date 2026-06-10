@@ -1,11 +1,27 @@
 import type { Request } from 'express';
 
+const normalizeToken = (token: string): string => {
+  const trimmedToken = token.trim().replace(/^"|"$/g, '');
+
+  try {
+    return decodeURIComponent(trimmedToken);
+  } catch {
+    return trimmedToken;
+  }
+};
+
 export function extractToken(request: Request): string | undefined {
   const authHeader = request.headers.authorization;
 
   if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.slice(7);
+    return normalizeToken(authHeader.slice(7));
   }
 
-  return request.cookies?.['access_token'] as string | undefined;
+  const cookieToken = request.cookies?.['access_token'] as string | undefined;
+
+  if (!cookieToken) {
+    return undefined;
+  }
+
+  return normalizeToken(cookieToken);
 }

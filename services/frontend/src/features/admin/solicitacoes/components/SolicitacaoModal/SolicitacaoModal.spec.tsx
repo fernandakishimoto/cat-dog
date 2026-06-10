@@ -13,14 +13,18 @@ const mockDetail: AdoptionRequestDetailType = {
   updated_at: '2026-06-08T10:00:00Z',
   adopter_name: 'Maria Silva',
   adopter_email: 'maria@email.com',
-  pet_name: 'Bolinha',
-  pet_species: 'cachorro',
-  pet_sex: 'macho',
-  pet_size: 'medio',
-  pet_age_months: 24,
-  pet_city: 'São Paulo',
   status: 'entrevista',
   observations: 'Lar com quintal',
+  pet_id: 'pet-1',
+  pet: {
+    name: 'Bolinha',
+    species: 'cachorro',
+    sex: 'macho',
+    size: 'medio',
+    age_months: 24,
+    city: 'São Paulo',
+    photo_url: null,
+  },
 };
 
 const defaultProps = {

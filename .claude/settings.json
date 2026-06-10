@@ -24,7 +24,20 @@
       "Bash(yarn install *)",
       "Bash(yarn add *)",
       "Bash(yarn test *)",
-      "Bash(yarn lint *)"
+      "Bash(yarn lint *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(yarn build *)",
+      "Bash(npm test *)",
+      "Bash(curl -sL https://github.com/supabase/cli/releases/latest/download/supabase_darwin_arm64.tar.gz -o /tmp/supabase.tar.gz)",
+      "Bash(tar -xzf /tmp/supabase.tar.gz -C /tmp)",
+      "Bash(sudo mv /tmp/supabase /usr/local/bin/supabase)",
+      "Bash(supabase --version)",
+      "Bash(mkdir -p ~/bin)",
+      "Bash(tar -xzf /tmp/supabase.tar.gz -C ~/bin)",
+      "Bash(echo 'export PATH=\"$HOME/bin:$PATH\"')",
+      "Bash(~/bin/supabase --version)",
+      "Bash(xargs ls)"
     ],
     "additionalDirectories": [
       "/Users/fernanda.kishimoto/Documents/IA_FIRST_TREINAMENTO/cat-dog/.makuco"

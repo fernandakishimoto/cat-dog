@@ -8,7 +8,11 @@ import { ConfigService } from '@nestjs/config';
 import { createClient } from '@supabase/supabase-js';
 import type { Request } from 'express';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const WS = require('ws') as typeof import('ws');
+
 import type { AppConfigType } from '@/config/configuration';
+import { extractToken } from '@/common/utils/extract-token';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -17,7 +21,7 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractToken(request);
+    const token = extractToken(request);
 
     if (!token) {
       throw new UnauthorizedException();
@@ -26,9 +30,17 @@ export class JwtAuthGuard implements CanActivate {
     const supabase = createClient(
       this.configService.get('supabase.url', { infer: true }),
       this.configService.get('supabase.anonKey', { infer: true }),
+      { realtime: { transport: WS as never } },
     );
 
-    const { data, error } = await supabase.auth.getUser(token);
+    let authUserResult: Awaited<ReturnType<typeof supabase.auth.getUser>>;
+    try {
+      authUserResult = await supabase.auth.getUser(token);
+    } catch {
+      throw new UnauthorizedException();
+    }
+
+    const { data, error } = authUserResult;
 
     if (error || !data.user) {
       throw new UnauthorizedException();
@@ -38,15 +50,4 @@ export class JwtAuthGuard implements CanActivate {
 
     return true;
   }
-
-  private extractToken(request: Request): string | undefined {
-    const authHeader = request.headers.authorization;
-
-    if (authHeader?.startsWith('Bearer ')) {
-      return authHeader.slice(7);
-    }
-
-    return request.cookies?.['access_token'];
-  }
-
 }

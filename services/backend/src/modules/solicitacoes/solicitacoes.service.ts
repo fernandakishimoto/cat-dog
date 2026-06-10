@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient } from '@supabase/supabase-js';
 
@@ -10,8 +10,60 @@ import type { AppConfigType } from '@/config/configuration';
 import type { ListSolicitacoesDto } from './dto/list-solicitacoes.dto';
 import type { UpdateStatusDto } from './dto/update-status.dto';
 
+type PetRowType = {
+  name: string;
+  species: string;
+  sex: string;
+  size: string;
+  age_months: number;
+  city: string;
+  photo_url: string | null;
+};
+
+type AdoptionRequestRowType = {
+  id: string;
+  created_at: string;
+  updated_at?: string;
+  adopter_name: string;
+  adopter_email: string;
+  status: string;
+  pet_id: string;
+  observations?: string | null;
+  pets: PetRowType | PetRowType[] | null;
+};
+
+const mapPet = (pets: PetRowType | PetRowType[] | null): PetRowType | null => {
+  if (!pets) {
+    return null;
+  }
+
+  if (Array.isArray(pets)) {
+    return pets[0] ?? null;
+  }
+
+  return pets;
+};
+
+const mapAdoptionRequestSummary = (row: AdoptionRequestRowType) => ({
+  id: row.id,
+  created_at: row.created_at,
+  adopter_name: row.adopter_name,
+  adopter_email: row.adopter_email,
+  status: row.status,
+  pet_id: row.pet_id,
+  pet: mapPet(row.pets),
+});
+
+const mapAdoptionRequestDetail = (row: AdoptionRequestRowType) => ({
+  ...mapAdoptionRequestSummary(row),
+  updated_at: row.updated_at ?? row.created_at,
+  observations: row.observations ?? null,
+});
+
 @Injectable()
 export class SolicitacoesService {
+
+  private readonly logger = new Logger(SolicitacoesService.name);
 
   constructor(private readonly configService: ConfigService<AppConfigType, true>) {}
 
@@ -31,25 +83,35 @@ export class SolicitacoesService {
 
     let query = this.supabase
       .from('adoption_requests')
-      .select('id, created_at, adopter_name, pet_name, pet_species, pet_sex, pet_size, pet_age_months, pet_city, status', { count: 'exact' });
+      .select(
+        'id, created_at, adopter_name, adopter_email, status, pet_id, pets(name, species, sex, size, age_months, city, photo_url)',
+        { count: 'exact' },
+      );
 
     if (dto.search) {
-      query = query.or(`pet_name.ilike.%${dto.search}%,pet_city.ilike.%${dto.search}%,adopter_name.ilike.%${dto.search}%`);
+      query = query.or(
+        `adopter_name.ilike.%${dto.search}%,adopter_email.ilike.%${dto.search}%,pets.name.ilike.%${dto.search}%,pets.city.ilike.%${dto.search}%`,
+      );
     }
 
-    if (dto.species) query = query.eq('pet_species', dto.species);
-    if (dto.sex) query = query.eq('pet_sex', dto.sex);
-    if (dto.size) query = query.eq('pet_size', dto.size);
-    if (dto.city) query = query.ilike('pet_city', `%${dto.city}%`);
+    if (dto.species) query = query.eq('pets.species', dto.species);
+    if (dto.sex) query = query.eq('pets.sex', dto.sex);
+    if (dto.size) query = query.eq('pets.size', dto.size);
+    if (dto.city) query = query.ilike('pets.city', `%${dto.city}%`);
 
     const { data, error, count } = await query
       .order('created_at', { ascending: false })
       .range(from, to);
 
-    if (error) throw new InternalServerErrorException('Erro interno ao processar solicitação');
+    if (error) {
+      this.logger.error('Failed to list adoption requests', error as Error);
+      throw new InternalServerErrorException(error.message);
+    }
+
+    const rows = (data ?? []) as AdoptionRequestRowType[];
 
     return {
-      data: data ?? [],
+      data: rows.map(mapAdoptionRequestSummary),
       total: count ?? 0,
       page,
       limit,
@@ -60,13 +122,13 @@ export class SolicitacoesService {
   async getById(id: string) {
     const { data, error } = await this.supabase
       .from('adoption_requests')
-      .select('*')
+      .select('*, pets(name, species, sex, size, age_months, city, photo_url)')
       .eq('id', id)
       .single();
 
     if (error || !data) throw new NotFoundException('Solicitação não encontrada');
 
-    return data;
+    return mapAdoptionRequestDetail(data as AdoptionRequestRowType);
   }
 
   async updateStatus(id: string, dto: UpdateStatusDto) {
@@ -91,12 +153,15 @@ export class SolicitacoesService {
       .from('adoption_requests')
       .update(updatePayload)
       .eq('id', id)
-      .select()
+      .select('*, pets(name, species, sex, size, age_months, city, photo_url)')
       .single();
 
-    if (error) throw new InternalServerErrorException('Erro interno ao processar solicitação');
+    if (error) {
+      this.logger.error('Failed to update adoption request status', error as Error);
+      throw new InternalServerErrorException(error.message);
+    }
 
-    return data;
+    return mapAdoptionRequestDetail(data as AdoptionRequestRowType);
   }
 
 }
